@@ -12857,10 +12857,17 @@ exports.default = function (context) {
               console.log('Update IOS build setting ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES to: YES', 'for build configuration', buildConfig.name);
             }
 
-            if (xcodeProject.getBuildProperty('LD_RUNPATH_SEARCH_PATHS', buildConfig.name) !== '"@executable_path/Frameworks"') {
-              xcodeProject.updateBuildProperty('LD_RUNPATH_SEARCH_PATHS', '"@executable_path/Frameworks"', buildConfig.name);
-              console.log('Update IOS build setting LD_RUNPATH_SEARCH_PATHS to: @executable_path/Frameworks', 'for build configuration', buildConfig.name);
-            }
+           var runpathSearchPaths = xcodeProject.getBuildProperty('LD_RUNPATH_SEARCH_PATHS', buildConfig.name);
+           var standardRunpathSearchPathString = '"@executable_path/Frameworks"';
+           // This used to check for runpath search paths simply not being equal to the standardised single search path above, and if
+           // it wasn't, add-swift-support would set to exactly that one search path.
+           // This breaks any implementations that want to set more than one search path.
+           // For now, this has been modified to make sure we don't do this replacement if the runpath search path string is
+           // longer, which is likely to the be the case if customised to have additional search paths.
+           if(runpathSearchPaths !== standardRunpathSearchPathString && runpathSearchPaths.length < standardRunpathSearchPathString) {
+                xcodeProject.updateBuildProperty('LD_RUNPATH_SEARCH_PATHS', '"@executable_path/Frameworks"', buildConfig.name);
+                console.log('Update IOS build setting LD_RUNPATH_SEARCH_PATHS to: @executable_path/Frameworks', 'for build configuration', buildConfig.name);
+           }
 
             if (typeof xcodeProject.getBuildProperty('SWIFT_VERSION', buildConfig.name) === 'undefined') {
               if (config.getPreference('UseLegacySwiftLanguageVersion', 'ios')) {
